@@ -1,126 +1,70 @@
-var chart = new Chartist.Line('.ct-chart', {
-    labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
+let nombres;
+let anios;
+let nombrePersonaje;
+let nombrePelicula;
+
+const starWars = async () => {
+  try {
+    let response = await fetch('https://swapi.dev/api/films/');
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+    }
+    let resultados = data.results;
+    nombres = data.results.map(results => results.title);
+
+    let years = data.results.map(results => results.release_date);
+    anios = years.map(year => year.slice(0, 4));
+    console.log(anios);
+    console.log(resultados, nombres, years);
+
+    let responseDos = await fetch ('https://swapi.dev/api/people/');
+    const dataDos = await responseDos.json();
+    if (!responseDos.ok) {
+      throw new Error(`Error HTTP: ${responseDos.status} - ${responseDos.statusText}`);
+    }
+    let resultadosDos = dataDos.results;
+    nombrePersonaje = dataDos.results.map(results => results.name)
+    let nombrePeliculass = dataDos.results.map(results => results.films)
+    nombrePelicula = nombrePeliculass.map(pelixs => pelixs.length)
+
+  } catch (error) {
+    console.error('Hubo un problema con la solicitud:', error.message);
+    
+  };
+
+}
+starWars();
+
+const pintores = async () => {
+  await starWars()
+  new Chartist.Line('.ct-chart', {
+    labels: nombres,
     series: [
-      [12, 9, 7, 8, 5, 4, 6, 2, 3, 3, 4, 6],
-      [4,  5, 3, 7, 3, 5, 5, 3, 4, 4, 5, 5],
-      [5,  3, 4, 5, 6, 3, 3, 4, 5, 6, 3, 4],
-      [3,  4, 5, 6, 7, 6, 4, 5, 6, 7, 6, 3]
+      anios,
     ]
   }, {
-    low: 0
-  });
-  
-  // Let's put a sequence number aside so we can use it in the event callbacks
-  var seq = 0,
-    delays = 80,
-    durations = 500;
-  
-  // Once the chart is fully created we reset the sequence
-  chart.on('created', function() {
-    seq = 0;
-  });
-  
-  // On each drawn element by Chartist we use the Chartist.Svg API to trigger SMIL animations
-  chart.on('draw', function(data) {
-    seq++;
-  
-    if(data.type === 'line') {
-      // If the drawn element is a line we do a simple opacity fade in. This could also be achieved using CSS3 animations.
-      data.element.animate({
-        opacity: {
-          // The delay when we like to start the animation
-          begin: seq * delays + 1000,
-          // Duration of the animation
-          dur: durations,
-          // The value where the animation should start
-          from: 0,
-          // The value where it should end
-          to: 1
-        }
-      });
-    } else if(data.type === 'label' && data.axis === 'x') {
-      data.element.animate({
-        y: {
-          begin: seq * delays,
-          dur: durations,
-          from: data.y + 100,
-          to: data.y,
-          // We can specify an easing function from Chartist.Svg.Easing
-          easing: 'easeOutQuart'
-        }
-      });
-    } else if(data.type === 'label' && data.axis === 'y') {
-      data.element.animate({
-        x: {
-          begin: seq * delays,
-          dur: durations,
-          from: data.x - 100,
-          to: data.x,
-          easing: 'easeOutQuart'
-        }
-      });
-    } else if(data.type === 'point') {
-      data.element.animate({
-        x1: {
-          begin: seq * delays,
-          dur: durations,
-          from: data.x - 10,
-          to: data.x,
-          easing: 'easeOutQuart'
-        },
-        x2: {
-          begin: seq * delays,
-          dur: durations,
-          from: data.x - 10,
-          to: data.x,
-          easing: 'easeOutQuart'
-        },
-        opacity: {
-          begin: seq * delays,
-          dur: durations,
-          from: 0,
-          to: 1,
-          easing: 'easeOutQuart'
-        }
-      });
-    } else if(data.type === 'grid') {
-      // Using data.axis we get x or y which we can use to construct our animation definition objects
-      var pos1Animation = {
-        begin: seq * delays,
-        dur: durations,
-        from: data[data.axis.units.pos + '1'] - 30,
-        to: data[data.axis.units.pos + '1'],
-        easing: 'easeOutQuart'
-      };
-  
-      var pos2Animation = {
-        begin: seq * delays,
-        dur: durations,
-        from: data[data.axis.units.pos + '2'] - 100,
-        to: data[data.axis.units.pos + '2'],
-        easing: 'easeOutQuart'
-      };
-  
-      var animations = {};
-      animations[data.axis.units.pos + '1'] = pos1Animation;
-      animations[data.axis.units.pos + '2'] = pos2Animation;
-      animations['opacity'] = {
-        begin: seq * delays,
-        dur: durations,
-        from: 0,
-        to: 1,
-        easing: 'easeOutQuart'
-      };
-  
-      data.element.animate(animations);
+    fullWidth: true,
+    chartPadding: {
+      right: 40
+    }
+  })
+
+  new Chartist.Bar('.ct-chartDos', {
+    labels: nombrePersonaje,
+    series: [
+      nombrePelicula
+    ]
+  }, {
+    seriesBarDistance: 500,
+    reverseData: true,
+    horizontalBars: true,
+    axisY: {
+      offset: 70
     }
   });
-  
-  // For the sake of the example we update the chart every time it's created with a delay of 10 seconds
-  chart.on('created', function() {
-    if(window.__exampleAnimateTimeout) {
-      clearTimeout(window.__exampleAnimateTimeout);
-      window.__exampleAnimateTimeout = null;
-    }
-    window.__exampleAnimateTimeout = setTimeout(chart.update.bind(chart), 12000);
-  });
+
+
+};
+
+pintores();
